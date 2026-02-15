@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>App Livraison</title>
+
+<style>
+body {
+    font-family: Arial;
+    margin: 0;
+    padding: 0;
+    background: #f2f2f2;
+}
+
+header {
+    background: #2c3e50;
+    color: white;
+    padding: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+select, input {
+    padding: 6px;
+    border-radius: 4px;
+    border: none;
+}
+
+.categories {
+    background: #ddd;
+    padding: 10px;
+}
+
+button {
+    padding: 7px 12px;
+    margin: 5px;
+    border: none;
+    background: #3498db;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #2980b9;
+}
+
+.section {
+    padding: 15px;
+}
+
+.card {
+    background: white;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 6px;
+}
+
+.hidden {
+    display: none;
+}
+</style>
+</head>
+<body>
+
+<header>
+    <h2>Application Livraison</h2>
+
+    <select id="roleSelect">
+        <option value="user">User</option>
+        <option value="merchant">Merchant</option>
+        <option value="livreur">Livreur</option>
+    </select>
+
+    <input type="text" id="searchBar" placeholder="Rechercher...">
+</header>
+
+<div class="categories">
+    <button onclick="filterCategory('all')">Tous</button>
+    <button onclick="filterCategory('food')">Food</button>
+    <button onclick="filterCategory('restaurant')">Restaurant</button>
+    <button onclick="filterCategory('outils')">Outils</button>
+</div>
+
+<div id="merchantSection" class="section hidden">
+    <h3>Ajouter un produit</h3>
+    <input type="text" id="productName" placeholder="Nom">
+    <input type="number" id="productPrice" placeholder="Prix">
+    <select id="productCategory">
+        <option value="food">Food</option>
+        <option value="restaurant">Restaurant</option>
+        <option value="outils">Outils</option>
+    </select>
+    <button onclick="addProduct()">Ajouter</button>
+</div>
+
+<div class="section">
+    <h3>Produits</h3>
+    <div id="productList"></div>
+</div>
+
+<div id="cartSection" class="section">
+    <h3>Panier</h3>
+    <div id="cart"></div>
+    <h4>Total: <span id="total">0</span> €</h4>
+    <button onclick="confirmOrder()">Confirmer la commande</button>
+</div>
+
+<div id="livreurSection" class="section hidden">
+    <h3>Commandes à livrer</h3>
+    <div id="orders"></div>
+</div>
+
+<script>
+let products = [
+    { id: 1, name: "Burger", price: 8, category: "food" },
+    { id: 2, name: "Pizza", price: 10, category: "restaurant" },
+    { id: 3, name: "Marteau", price: 15, category: "outils" }
+];
+
+let cart = [];
+let orders = [];
+let currentCategory = "all";
+
+const productList = document.getElementById("productList");
+const cartDiv = document.getElementById("cart");
+const totalSpan = document.getElementById("total");
+const ordersDiv = document.getElementById("orders");
+
+document.getElementById("roleSelect").addEventListener("change", function() {
+    const role = this.value;
+
+    document.getElementById("merchantSection").classList.add("hidden");
+    document.getElementById("livreurSection").classList.add("hidden");
+    document.getElementById("cartSection").classList.remove("hidden");
+
+    if(role === "merchant"){
+        document.getElementById("merchantSection").classList.remove("hidden");
+    }
+
+    if(role === "livreur"){
+        document.getElementById("livreurSection").classList.remove("hidden");
+        document.getElementById("cartSection").classList.add("hidden");
+        renderOrders();
+    }
+});
+
+function renderProducts() {
+    productList.innerHTML = "";
+    const search = document.getElementById("searchBar").value.toLowerCase();
+
+    products
+        .filter(p => currentCategory === "all" || p.category === currentCategory)
+        .filter(p => p.name.toLowerCase().includes(search))
+        .forEach(product => {
+            const div = document.createElement("div");
+            div.className = "card";
+            div.innerHTML = `
+                <strong>${product.name}</strong> - ${product.price} €
+                <button onclick="addToCart(${product.id})">Ajouter</button>
+            `;
+            productList.appendChild(div);
+        });
+}
+
+function filterCategory(cat){
+    currentCategory = cat;
+    renderProducts();
+}
+
+function addToCart(id){
+    const product = products.find(p => p.id === id);
+    cart.push(product);
+    renderCart();
+}
+
+function renderCart(){
+    cartDiv.innerHTML = "";
+    let total = 0;
+
+    cart.forEach((item, index) => {
+        total += item.price;
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+            ${item.name} - ${item.price} €
+            <button onclick="removeFromCart(${index})">Supprimer</button>
+        `;
+        cartDiv.appendChild(div);
+    });
+
+    totalSpan.textContent = total;
+}
+
+function removeFromCart(index){
+    cart.splice(index, 1);
+    renderCart();
+}
+
+function confirmOrder(){
+    if(cart.length === 0){
+        alert("Panier vide !");
+        return;
+    }
+
+    orders.push([...cart]);
+    cart = [];
+    renderCart();
+    alert("Commande confirmée !");
+}
+
+function renderOrders(){
+    ordersDiv.innerHTML = "";
+
+    orders.forEach((order, index) => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+            <strong>Commande ${index+1}</strong><br>
+            ${order.map(p => p.name).join(", ")}
+        `;
+        ordersDiv.appendChild(div);
+    });
+}
+
+function addProduct(){
+    const name = document.getElementById("productName").value;
+    const price = parseFloat(document.getElementById("productPrice").value);
+    const category = document.getElementById("productCategory").value;
+
+    if(!name || !price){
+        alert("Remplir tous les champs !");
+        return;
+    }
+
+    const newProduct = {
+        id: products.length + 1,
+        name,
+        price,
+        category
+    };
+
+    products.push(newProduct);
+    renderProducts();
+
+    document.getElementById("productName").value = "";
+    document.getElementById("productPrice").value = "";
+}
+
+document.getElementById("searchBar").addEventListener("input", renderProducts);
+
+renderProducts();
+</script>
+
+</body>
+</html>
