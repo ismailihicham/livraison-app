@@ -9,14 +9,14 @@ app.use(express.json());
 
 /*
 ====================================
-DATA EN MEMOIRE (DEMO SANS BDD)
+DATA EN MEMOIRE (PAS DE BDD)
 ====================================
 */
 
 const products = [
-  { id: 1, name: "Burger", price: 8, category: "food", stock: 25 },
-  { id: 2, name: "Pizza", price: 10, category: "restaurant", stock: 12 },
-  { id: 3, name: "Marteau", price: 15, category: "outils", stock: 7 },
+  { id: 1, name: "Burger", price: 8, category: "food", stock: 20 },
+  { id: 2, name: "Pizza", price: 10, category: "restaurant", stock: 15 },
+  { id: 3, name: "Marteau", price: 15, category: "outils", stock: 5 },
   { id: 4, name: "Tacos", price: 9, category: "food", stock: 0 }
 ];
 
@@ -35,8 +35,9 @@ ROUTES API
 
 /**
  * GET /api/products
- * Retourne les produits disponibles en stock (>0)
- * Filtre optionnel par catégorie ?category=food
+ * Retourne uniquement les produits en stock (>0)
+ * Optionnel : filtre par catégorie
+ * Exemple: /api/products?category=food
  */
 app.get("/api/products", (req, res) => {
   const { category } = req.query;
@@ -58,7 +59,7 @@ app.get("/api/products", (req, res) => {
 
 /**
  * GET /api/stores
- * Retourne les magasins proches par ville
+ * Retourne les magasins proches d'une ville
  * Exemple: /api/stores?city=Paris
  */
 app.get("/api/stores", (req, res) => {
@@ -67,7 +68,7 @@ app.get("/api/stores", (req, res) => {
   if (!city) {
     return res.status(400).json({
       success: false,
-      message: "Le paramètre city est obligatoire"
+      message: "Le paramètre 'city' est obligatoire"
     });
   }
 
@@ -84,12 +85,13 @@ app.get("/api/stores", (req, res) => {
 
 /*
 ====================================
-HEALTH CHECK (Azure)
+HEALTH CHECK
 ====================================
 */
 app.get("/", (req, res) => {
   res.status(200).json({
-    status: "API Livraison running",
+    status: "API Livraison is running",
+    node: process.version,
     environment: process.env.NODE_ENV || "development"
   });
 });
